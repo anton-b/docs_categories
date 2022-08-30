@@ -3,6 +3,7 @@ import json
 import re
 import os
 import glob
+from functools import reduce
 
 from nltk.tokenize import word_tokenize
 
@@ -41,10 +42,19 @@ def file_to_model_piece(filename):
         return count_tokens(normalize_text(f.read()))
 
 
+def squash_records(model_records):
+    result = {}
+    for record in model_records:
+        for k, v in record.items():
+            word_freq = result.get(k, 0)
+            result[k] = word_freq + v
+    return result
+
+
 for category, files in list_datasets("data").items():
     path = f"models\\{category}"
     with open(path, "w") as f:
         res = []
         for fl in files:
             res.append(file_to_model_piece(fl))
-        f.write(json.dumps(res))
+        f.write(json.dumps(squash_records(res)))
